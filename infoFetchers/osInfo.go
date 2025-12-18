@@ -2,6 +2,7 @@ package infofetchers
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 
@@ -17,7 +18,8 @@ func OsInfo(ch chan string, wg *sync.WaitGroup) {
 		if err != nil {
 			log.Fatal("Fatal Error when fetching Kernel Version")
 		}
-		ch <- kernVer
+		//ch <- kernVer
+		fmt.Println("Kernel Version", kernVer)
 
 	}()
 
@@ -29,6 +31,7 @@ func OsInfo(ch chan string, wg *sync.WaitGroup) {
 			log.Fatal("Reached Fatal Error when fetching Platform Info")
 		}
 		ch <- platform
+		fmt.Println("Platform: ", platform)
 
 	}()
 

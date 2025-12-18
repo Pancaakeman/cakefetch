@@ -20,37 +20,38 @@ func OSStats(ch chan any, wg *sync.WaitGroup) {
 
 		bootTime := time.Unix(int64(bootTimeRaw), 0)
 		ch <- bootTime
-	}()
+		fmt.Println("BootTime: ", bootTime)
 
+	}()
 	go func() {
 		defer wg.Done()
-		chUpSend := make(chan uint64)
+		chUp := make(chan uint64, 1)
+		chUpReply := make(chan string, 1)
 		uptimeRaw, err := host.Uptime()
 
 		if err != nil {
 			log.Fatal("Fatal Error reached when attempting to fetch Uptime")
 		}
-		chUpSend <- uptimeRaw
 
-		wg.Add(1)
+		wgUp := sync.WaitGroup{}
+		wgUp.Add(1)
 		go func() {
-			defer wg.Done()
-			uptimeConv(chUpSend, wg)
+			defer wgUp.Done()
+			chUp <- uptimeRaw
+			uptimeConv(chUp, chUpReply)
+			defer close(chUpReply)
 		}()
+		wgUp.Wait()
+		//ch <- chUpReply
+		fmt.Println("Uptime: ", <-chUpReply)
 
-		wg.Wait()
-		defer close(chUpSend)
-		ch <- uptimeRaw
 	}()
 }
 
-func uptimeConv(chUpSend chan uint64, wg *sync.WaitGroup) {
-	//chUpReciv := make(chan uint64, 2)
+func uptimeConv(chUp chan uint64, chUpReply chan string) {
 
-	hours := <-chUpSend / 3600
-	minutes := <-chUpSend % 3600 / 60
-
-	fmt.Println(hours, minutes)
-	return
-
+	uptimeRaw := <-chUp
+	hours := uptimeRaw / 3600
+	minutes := uptimeRaw % 3600 / 60
+	chUpReply <- fmt.Sprintf("Uptime: %d h %d m", hours, minutes)
 }
