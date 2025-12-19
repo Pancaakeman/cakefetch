@@ -20,20 +20,11 @@ jobs:
 
   build:
     name: Build ${{ matrix.goos }}-${{ matrix.goarch }}
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
-          - runner: ubuntu-latest
-            goos: linux
-            goarch: amd64
-            ext: ""
-          - runner: windows-latest
-            goos: windows
-            goarch: amd64
-            ext: ".exe"
-          - runner: macos-latest
-            goos: darwin
+          - goos: linux
             goarch: amd64
             ext: ""
     steps:
@@ -61,12 +52,7 @@ jobs:
           output_name="cakefetch-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}"
           artifact_name="cakefetch-${{ matrix.goos }}-${{ matrix.goarch }}.zip"
           cd build
-          if [[ "${{ matrix.runner }}" == "windows-latest" ]]; then
-            # On Windows runner, use PowerShell Compress-Archive
-            pwsh -Command "Compress-Archive -Path '${output_name}' -DestinationPath '${artifact_name}' -Force"
-          else
-            zip -j "${artifact_name}" "${output_name}"
-          fi
+          zip -j "${artifact_name}" "${output_name}"
           ls -la
 
       - name: Upload artifact
