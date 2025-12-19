@@ -46,4 +46,37 @@ jobs:
           echo "TAG=${TAG}" >> $GITHUB_ENV
           echo "Using tag: ${TAG}"
 
-      - name: Build (
+      - name: Build (linux/amd64)
+        env:
+          CGO_ENABLED: 0
+          GOOS: linux
+          GOARCH: amd64
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          output="cakefetch-${TAG}-linux-amd64"
+          echo "Building ${output}"
+          GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=${CGO_ENABLED} \
+            go build -ldflags="-s -w" -o "build/${output}" ./...
+          ls -la build
+
+      - name: Package source + executable (tar.gz)
+        run: |
+          set -euo pipefail
+          pkgroot="pkg"
+          packagedir="${pkgroot}/cakefetch-${TAG}"
+          rm -rf "${pkgroot}"
+          mkdir -p "${packagedir}"
+          # Export tracked files from git into the package dir
+          git archive --format=tar HEAD | tar -x -C "${packagedir}"
+          # Copy the built binary into the package dir
+          cp "build/cakefetch-${TAG}-linux-amd64" "${packagedir}/"
+          # Create a single tar.gz containing the top-level folder cakefetch-<tag>/
+          tar -czf "cakefetch-${TAG}-linux-amd64.tar.gz" -C "${pkgroot}" "cakefetch-${TAG}"
+          ls -la "cakefetch-${TAG}-linux-amd64.tar.gz"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cakefetch-${{ env.TAG }}-linux-amd64
+          path: cakefetch-${{ env.TAG }}-linux-amd64.tar.gz
