@@ -57,7 +57,7 @@ jobs:
           output="cakefetch-${TAG}-linux-amd64"
           echo "Building ${output}"
           GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=${CGO_ENABLED} \
-            go build -ldflags="-s -w" -o "build/${output}" ./...
+          go build -ldflags="-s -w" -o "build/${output}" ./...
           ls -la build
 
       - name: Package source + executable (tar.gz)
