@@ -31,40 +31,19 @@ jobs:
           go-version: '1.25'
 
       - name: Determine tag
-        run: |
-          echo "TAG=${{ github.ref_name != '' && github.ref_name || github.event.inputs.tag }}" >> $GITHUB_ENV
-
-      - name: Build (linux/amd64)
         env:
-          CGO_ENABLED: 0
-          GOOS: linux
-          GOARCH: amd64
+          WORKFLOW_INPUT_TAG: ${{ github.event.inputs.tag }}
         run: |
           set -euo pipefail
-          mkdir -p build
-          output="cakefetch-${TAG}-linux-amd64"
-          echo "Building ${output}"
-          GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=${CGO_ENABLED} \
-            go build -ldflags="-s -w" -o "build/${output}" ./...
-          ls -la build
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          elif [[ -n "${WORKFLOW_INPUT_TAG:-}" ]]; then
+            TAG="${WORKFLOW_INPUT_TAG}"
+          else
+            echo "No tag supplied (push a tag or provide tag in workflow_dispatch)."
+            exit 1
+          fi
+          echo "TAG=${TAG}" >> $GITHUB_ENV
+          echo "Using tag: ${TAG}"
 
-      - name: Package source + executable (tar.gz)
-        run: |
-          set -euo pipefail
-          pkgroot="pkg"
-          packagedir="${pkgroot}/cakefetch-${TAG}"
-          rm -rf "${pkgroot}"
-          mkdir -p "${packagedir}"
-          # Export tracked files from git into the package dir
-          git archive --format=tar HEAD | tar -x -C "${packagedir}"
-          # Copy the built binary into the package dir
-          cp "build/cakefetch-${TAG}-linux-amd64" "${packagedir}/"
-          # Create a single tar.gz containing the top-level folder cakefetch-<tag>/
-          tar -czf "cakefetch-${TAG}-linux-amd64.tar.gz" -C "${pkgroot}" "cakefetch-${TAG}"
-          ls -la "cakefetch-${TAG}-linux-amd64.tar.gz"
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: cakefetch-${{ env.TAG }}-linux-amd64
-          path: cakefetch-${{ env.TAG }}-linux-amd64.tar.gz
+      - name: Build (
