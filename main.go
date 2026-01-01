@@ -17,6 +17,7 @@ func main() {
 
 	infofetchers.OsInfo(chOsInfo, &wg)
 	infofetchers.OSStats(chTime, &wg)
+	infofetchers.OsNet(&wg)
 	wg.Wait()
 
 	defer close(chOsInfo)

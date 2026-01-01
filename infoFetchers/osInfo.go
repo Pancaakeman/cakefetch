@@ -11,7 +11,7 @@ import (
 
 func OsInfo(ch chan string, wg *sync.WaitGroup) {
 
-	wg.Add(2)
+	wg.Add(3)
 	go func() {
 		defer wg.Done()
 		kernVer, err := host.KernelVersion()
@@ -31,8 +31,18 @@ func OsInfo(ch chan string, wg *sync.WaitGroup) {
 			log.Fatal("Reached Fatal Error when fetching Platform Info")
 		}
 		ch <- platform
-		fmt.Println("Platform: ", platform)
+		fmt.Printf("Platform: %x \n", platform)
 
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		hostID, err := host.HostID()
+		if err != nil {
+			log.Fatal("Fatal error reached fetching hostID")
+		}
+		fmt.Println("HostID: ", hostID)
 	}()
 
 }

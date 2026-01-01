@@ -46,6 +46,9 @@ func OSStats(ch chan any, wg *sync.WaitGroup) {
 		fmt.Println("Uptime: ", <-chUpReply)
 
 	}()
+	go func() {
+
+	}()
 }
 
 func uptimeConv(chUp chan uint64, chUpReply chan string) {
